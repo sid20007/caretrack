@@ -1,6 +1,14 @@
 import { Context } from "telegraf";
+import { isRegistered, isOnboarding, startOnboarding } from "../onboarding";
 
 export async function startCommand(ctx: Context): Promise<void> {
-  const name = ctx.from?.first_name ?? "there";
-  await ctx.reply(`Hey ${name}. Send your readings like: BP 130/85 Sugar 145 Taken yes`);
+  const id = ctx.from?.id;
+  if (!id) return;
+
+  if (await isRegistered(id)) {
+    await ctx.reply("You're already registered. Send your readings anytime.");
+    return;
+  }
+
+  await startOnboarding(ctx);
 }

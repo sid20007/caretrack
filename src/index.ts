@@ -1,20 +1,16 @@
 import { config } from "./config";
 import { createBot } from "./bot";
 import { createServer } from "./server";
+import { startAlertScheduler } from "./bot/alerts";
 
 async function main(): Promise<void> {
   const bot = createBot();
   const app = createServer();
 
-  if (config.isProd && config.webhookUrl) {
-    const webhookPath = `/webhook/${config.botToken}`;
-    app.use(bot.webhookCallback(webhookPath));
-    await bot.telegram.setWebhook(`${config.webhookUrl}${webhookPath}`);
-    console.log(`Webhook registered: ${config.webhookUrl}${webhookPath}`);
-  } else {
-    bot.launch();
-    console.log("Bot running (long-polling)");
-  }
+  bot.launch();
+  console.log("Bot running (long-polling)");
+
+  startAlertScheduler(bot);
 
   app.listen(config.port, () => {
     console.log(`Server on :${config.port} [${config.nodeEnv}]`);
