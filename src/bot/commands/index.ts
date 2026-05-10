@@ -5,14 +5,15 @@ import { pingCommand } from "./ping";
 import { healthHandler, isHealthMessage } from "./health";
 import { isRegistered, isOnboarding, handleOnboardingStep, startOnboarding } from "../onboarding";
 import { findFamilyMember } from "../../db/familyMembers";
-
 import { resetCommand } from "./reset";
+import { summaryCommand } from "./summary";
 
 export function registerCommands(bot: Telegraf<Context>): void {
   bot.start(startCommand);
   bot.help(helpCommand);
   bot.command("ping", pingCommand);
   bot.command("reset", resetCommand);
+  bot.command("summary", summaryCommand);
 
   bot.on("text", async (ctx) => {
     const id = ctx.from?.id;

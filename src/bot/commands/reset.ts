@@ -1,6 +1,7 @@
 import { Context } from "telegraf";
-import { deletePatient } from "../../db/patients";
-import { deleteFamilyMember } from "../../db/familyMembers";
+import { findPatient, deletePatient } from "../../db/patients";
+import { findFamilyMember, deleteFamilyMember, deleteFamilyMembersByPatientId } from "../../db/familyMembers";
+import { deleteAllReadings } from "../../db/readings";
 import { clearOnboardingSession } from "../onboarding";
 import { config } from "../../config";
 
@@ -15,11 +16,37 @@ export async function resetCommand(ctx: Context): Promise<void> {
 
   // Clear session first regardless of DB outcome
   clearOnboardingSession(id);
+  console.log(`Reset: Cleared onboarding session for ${id}`);
 
   try {
-    await deleteFamilyMember(id);
-    await deletePatient(id);
-    await ctx.reply("Reset done. Use /start to register again.");
+    const patient = await findPatient(id);
+    if (patient && patient.patient_id) {
+      // User is a patient, delete everything related
+      await deleteAllReadings(id);
+      console.log(`Reset: Deleted readings for patient ${id}`);
+
+      await deleteFamilyMembersByPatientId(patient.patient_id);
+      console.log(`Reset: Deleted family members linked to patient ${id}`);
+
+      await deletePatient(id);
+      console.log(`Reset: Deleted patient profile for ${id}`);
+      
+      await ctx.reply("Patient profile and all related data (readings, family links) have been deleted. Use /start to begin again.");
+      return;
+    }
+
+    const family = await findFamilyMember(id);
+    if (family) {
+      // User is a family member, delete just their record
+      await deleteFamilyMember(id);
+      console.log(`Reset: Deleted family member profile for ${id}`);
+
+      await ctx.reply("Family member profile deleted. Use /start to begin again.");
+      return;
+    }
+
+    // Neither a patient nor a family member
+    await ctx.reply("Reset complete. You have no registered profiles. Use /start to begin again.");
   } catch (err: any) {
     console.error("Reset DB error:", err.message ?? err);
     await ctx.reply(`Reset failed: ${err.message ?? "unknown error"}`);

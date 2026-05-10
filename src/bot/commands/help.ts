@@ -5,9 +5,10 @@ export async function helpCommand(ctx: Context): Promise<void> {
     [
       "Commands:",
       "/start  - start the bot",
-      "/help   - show this message",
-      "/ping   - check latency",
-      "/reset  - reset registration (dev only)",
+      "/help    - show this message",
+      "/ping    - check latency",
+      "/summary - weekly health summary (family only)",
+      "/reset   - reset registration (dev only)",
       "",
       "Send readings as plain text:",
       "BP 130/85 Sugar 145 Taken yes",

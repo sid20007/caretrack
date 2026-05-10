@@ -38,3 +38,8 @@ export async function deleteFamilyMember(telegramId: number) {
   // ignore not-found — deleting a non-existent row is fine during reset
   if (error && error.code !== "PGRST116") throw error;
 }
+
+export async function deleteFamilyMembersByPatientId(patientId: string) {
+  const { error } = await supabase.from("family_members").delete().eq("patient_id", patientId);
+  if (error && error.code !== "PGRST116") throw error;
+}

@@ -58,3 +58,14 @@ export async function deletePatient(telegramId: number) {
   // ignore not-found — deleting a non-existent row is fine during reset
   if (error && error.code !== "PGRST116") throw error;
 }
+
+export async function getPatientById(patientId: string): Promise<Patient | null> {
+  const { data, error } = await supabase
+    .from("patients")
+    .select("*")
+    .eq("patient_id", patientId)
+    .single();
+
+  if (error || !data) return null;
+  return data as Patient;
+}
