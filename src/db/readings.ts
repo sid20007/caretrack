@@ -12,15 +12,12 @@ export async function saveReading(telegramId: number, reading: HealthReading) {
   if (error) throw error;
 }
 
-export async function hasReadingToday(telegramId: number): Promise<boolean> {
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-
+export async function hasReadingSince(telegramId: number, since: Date): Promise<boolean> {
   const { data, error } = await supabase
     .from("readings")
     .select("id")
     .eq("telegram_id", telegramId)
-    .gte("created_at", todayStart.toISOString())
+    .gte("created_at", since.toISOString())
     .limit(1);
 
   if (error || !data) return false;

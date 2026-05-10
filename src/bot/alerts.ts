@@ -1,21 +1,35 @@
 import { Telegraf } from "telegraf";
 import { getAllPatientIds } from "../db/patients";
-import { hasReadingToday } from "../db/readings";
+import { hasReadingSince } from "../db/readings";
 import { getFamilyForPatient } from "../db/familyMembers";
+import { config } from "../config";
 
-const ALERT_INTERVAL_MS = 4 * 60 * 60 * 1000; // every 4 hours
+const IS_DEV = config.nodeEnv === "development";
+const ALERT_INTERVAL_MS = IS_DEV ? 60 * 1000 : 4 * 60 * 60 * 1000;
 
 export function startAlertScheduler(bot: Telegraf): void {
   setInterval(() => checkMissedReadings(bot), ALERT_INTERVAL_MS);
-  console.log("Alert scheduler started (4h interval)");
+  console.log(`Alert scheduler started (${IS_DEV ? '1m' : '4h'} interval)`);
 }
 
 async function checkMissedReadings(bot: Telegraf): Promise<void> {
+  console.log("Running alert check...");
+  let patientsScanned = 0;
+  let alertsSent = 0;
+
   try {
     const patients = await getAllPatientIds();
+    patientsScanned = patients.length;
 
     for (const patient of patients) {
-      const hasReading = await hasReadingToday(patient.telegram_id);
+      const since = new Date();
+      if (IS_DEV) {
+        since.setMinutes(since.getMinutes() - 1);
+      } else {
+        since.setHours(0, 0, 0, 0);
+      }
+
+      const hasReading = await hasReadingSince(patient.telegram_id, since);
       if (hasReading) continue;
 
       const family = await getFamilyForPatient(patient.patient_id!);
@@ -23,8 +37,9 @@ async function checkMissedReadings(bot: Telegraf): Promise<void> {
         try {
           await bot.telegram.sendMessage(
             member.telegram_id,
-            `${patient.patient_name} hasn't logged a reading today.`
+            `⚠️ ${patient.patient_name} the patient has not submitted today's health reading.`
           );
+          alertsSent++;
         } catch (err: any) {
           // user may have blocked the bot, skip
           console.error(`Alert to ${member.telegram_id} failed:`, err.message);
@@ -33,5 +48,7 @@ async function checkMissedReadings(bot: Telegraf): Promise<void> {
     }
   } catch (err: any) {
     console.error("Alert check failed:", err.message);
+  } finally {
+    console.log(`Alert check complete. Patients scanned: ${patientsScanned}. Alerts sent: ${alertsSent}.`);
   }
 }
