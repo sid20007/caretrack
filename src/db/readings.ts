@@ -49,7 +49,8 @@ export async function getWeeklyReadings(telegramId: number): Promise<DbReading[]
   return data as DbReading[];
 }
 
-export async function deleteAllReadings(telegramId: number) {
-  const { error } = await supabase.from("readings").delete().eq("telegram_id", telegramId);
+export async function deleteAllReadings(telegramId: number): Promise<number> {
+  const { error, count } = await supabase.from("readings").delete({ count: "exact" }).eq("telegram_id", telegramId);
   if (error && error.code !== "PGRST116") throw error;
+  return count ?? 0;
 }

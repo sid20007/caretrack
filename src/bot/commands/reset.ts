@@ -22,24 +22,24 @@ export async function resetCommand(ctx: Context): Promise<void> {
     const patient = await findPatient(id);
     if (patient && patient.patient_id) {
       // User is a patient, delete everything related
-      await deleteAllReadings(id);
-      console.log(`Reset: Deleted readings for patient ${id}`);
+      const readingsDeleted = await deleteAllReadings(id);
+      console.log(`Reset: Deleted ${readingsDeleted} readings for patient ${id}`);
 
-      await deleteFamilyMembersByPatientId(patient.patient_id);
-      console.log(`Reset: Deleted family members linked to patient ${id}`);
+      const familyDeletedCount = await deleteFamilyMembersByPatientId(patient.patient_id);
+      console.log(`Reset: Deleted ${familyDeletedCount} family members linked to patient ${id}`);
 
-      await deletePatient(id);
-      console.log(`Reset: Deleted patient profile for ${id}`);
+      const patientDeleted = await deletePatient(id);
+      console.log(`Reset: Deleted patient profile for ${id} (success: ${patientDeleted})`);
       
-      await ctx.reply("Patient profile and all related data (readings, family links) have been deleted. Use /start to begin again.");
+      await ctx.reply(`Patient profile and all related data have been deleted.\n- Readings deleted: ${readingsDeleted}\n- Linked family members deleted: ${familyDeletedCount}\nUse /start to begin again.`);
       return;
     }
 
     const family = await findFamilyMember(id);
     if (family) {
       // User is a family member, delete just their record
-      await deleteFamilyMember(id);
-      console.log(`Reset: Deleted family member profile for ${id}`);
+      const familyDeleted = await deleteFamilyMember(id);
+      console.log(`Reset: Deleted family member profile for ${id} (success: ${familyDeleted})`);
 
       await ctx.reply("Family member profile deleted. Use /start to begin again.");
       return;

@@ -33,13 +33,15 @@ export async function getFamilyForPatient(patientId: string): Promise<FamilyMemb
   if (error || !data) return [];
   return data as FamilyMember[];
 }
-export async function deleteFamilyMember(telegramId: number) {
-  const { error } = await supabase.from("family_members").delete().eq("telegram_id", telegramId);
+export async function deleteFamilyMember(telegramId: number): Promise<boolean> {
+  const { error, count } = await supabase.from("family_members").delete({ count: "exact" }).eq("telegram_id", telegramId);
   // ignore not-found — deleting a non-existent row is fine during reset
   if (error && error.code !== "PGRST116") throw error;
+  return (count ?? 0) > 0;
 }
 
-export async function deleteFamilyMembersByPatientId(patientId: string) {
-  const { error } = await supabase.from("family_members").delete().eq("patient_id", patientId);
+export async function deleteFamilyMembersByPatientId(patientId: string): Promise<number> {
+  const { error, count } = await supabase.from("family_members").delete({ count: "exact" }).eq("patient_id", patientId);
   if (error && error.code !== "PGRST116") throw error;
+  return count ?? 0;
 }

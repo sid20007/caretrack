@@ -53,10 +53,11 @@ export async function getAllPatientIds(): Promise<Patient[]> {
   if (error || !data) return [];
   return data as Patient[];
 }
-export async function deletePatient(telegramId: number) {
-  const { error } = await supabase.from("patients").delete().eq("telegram_id", telegramId);
+export async function deletePatient(telegramId: number): Promise<boolean> {
+  const { error, count } = await supabase.from("patients").delete({ count: "exact" }).eq("telegram_id", telegramId);
   // ignore not-found — deleting a non-existent row is fine during reset
   if (error && error.code !== "PGRST116") throw error;
+  return (count ?? 0) > 0;
 }
 
 export async function getPatientById(patientId: string): Promise<Patient | null> {
