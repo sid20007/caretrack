@@ -74,18 +74,6 @@ Patient → Telegram Bot → Backend Parser → Supabase DB
 - Vercel (Frontend deployment)
 
 ---
-
-## Screenshots
-
-
-- patient onboarding
-- family linking
-- missed-reading alert
-- medicine confirmation
-- weekly summary
-
----
-
 ## Local Setup
 
 Clone the repository:
